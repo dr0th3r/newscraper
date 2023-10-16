@@ -7,9 +7,9 @@
 
 ### How to run
 
-`
+```
 pip install requests
 pip install beautifulsoup4
 
 py main.py
-`
+```
