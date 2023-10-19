@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-default_webs = ["https://www.root.cz/", "https://www.abclinuxu.cz/", "https://www.lupa.cz/"]
+default_webs = ["https://www.root.cz/", "https://www.abclinuxu.cz/", "https://www.lupa.cz/", "https://www.svethardware.cz"]
 
 class Scraper:
   def __init__(self, keywords=None, websites=None):
@@ -18,6 +18,8 @@ class Scraper:
         self.get_abclinuxu()
       if (web == "https://www.lupa.cz/"):
         self.get_lupacz()
+      if (web == "https://www.svethardware.cz"):
+        self.get_svethwcz()
       else: print(f"Tento web ({web}) zatím neumíme zpracovat.")
 
       for k, v in self.articles.items():
@@ -72,6 +74,17 @@ class Scraper:
       self.articles = self.articles | self.find_articles_lupa(articles_list, "https://www.lupa.cz/")
     else:
       print('Chyba při načítání stranky lupa.cz"', response.status_code)
+
+  def get_svethwcz(self):
+    response = requests.get("https://www.svethardware.cz/aktuality/")
+
+    if response.status_code == 200:
+      soup = BeautifulSoup(response.text, 'html.parser')
+
+      articles_list = soup.find(id="main")
+      self.articles = self.articles | self.find_articles_svethw(articles_list, "https://www.svethardware.cz")
+    else:
+      print('Chyba při načítání stránky svethardware.cz:', response.status_code)   
 
   def find_articles_root(self, section, base_url):
     if 'http' not in base_url:
@@ -151,6 +164,27 @@ class Scraper:
 
     return articles_dict
 
+  def find_articles_svethw(self, section, base_url):
+    if 'http' not in base_url:
+      print("Error: invalid base url")
+      return {}
+
+    articles_dict = {}
+    articles = section.find_all("h2")
+
+    for article in articles:
+      title = article.text
+
+      if self.check_for_keywords(title):
+        url = article.parent['href']
+        url = self.correct_url(url, base_url)
+
+      articles_dict[title] = url
+
+    return articles_dict
+
+
+
   def check_for_keywords(self, title):
       if title == '':
         return False
@@ -172,7 +206,7 @@ class Scraper:
     return url
 
 
-scraper = Scraper([],["https://www.lupa.cz/"])
+scraper = Scraper([],["https://www.svethardware.cz"])
 scraper.get_all_articles()
   
 
